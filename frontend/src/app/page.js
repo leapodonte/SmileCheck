@@ -78,9 +78,7 @@ export default function Home() {
             {/* Info Box */}
             <div className="mt-8 bg-gradient-to-b from-[#0B869F] via-[#62A0AD] to-[#BBBBBB] backdrop-blur-sm rounded-lg p-4 text-white">
               <p className="text-sm">
-                Click the "Add Images" button in the bottom left corner to
-                upload your new smiling teeth photo, or simply type any question
-                you have about your dental health.
+                  {"Click the \"Add Images\" button in the bottom left corner to upload your new smiling teeth photo, or simply type any question you have about your dental health."}
               </p>
               <div className="mt-10 flex items-center justify-between">
                 <button className="bg-[#6A6A6A] rounded-4xl text-white px-4 py-2 text-sm flex items-center gap-2">
