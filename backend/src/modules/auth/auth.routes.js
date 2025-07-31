@@ -14,4 +14,8 @@ authRouter.post("/google", googleOAuthHandler);
 
 authRouter.get("/verify/email", verifyEmail);
 
+authRouter.post('/forgot-password', auth.requestPasswordReset);
+authRouter.post('/verify-code', auth.verifyResetCode);
+authRouter.post('/reset-password', auth.resetPassword);
+
 export default authRouter;

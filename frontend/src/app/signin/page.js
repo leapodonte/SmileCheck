@@ -240,7 +240,7 @@ const SignInPage = () => {
             ))}
 
             <div className="w-full text-right text-xs sm:text-sm ">
-              <Link href="/account/forgot-password" className="text-[#0B869F]">
+              <Link href="/forgot-password" className="text-[#0B869F]">
                 Forgot Password?
               </Link>
             </div>
@@ -264,7 +264,6 @@ const SignInPage = () => {
             <span className="bg-white px-1">Or</span>
           </div>
 
-          <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}>
             <div className="w-full flex flex-col gap-y-3">
               <div
                 id="googleSignInBtn"
@@ -273,7 +272,7 @@ const SignInPage = () => {
                 {/* This div will be replaced by the real Google button */}
               </div>
             </div>
-          </GoogleOAuthProvider>
+          
 
           <span className="text-center text-xs sm:text-sm text-gray-600 mt-2 block">
             Don’t have an account?{" "}

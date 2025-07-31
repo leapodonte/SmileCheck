@@ -1,7 +1,12 @@
 import nodemailer from 'nodemailer';
 
-const sendEmail = async (to, subject, text) => {
+const sendEmail = async ({ to, subject, text }) => {
   try {
+    console.log("EMAIL_USER:", process.env.EMAIL_USER);
+console.log("EMAIL_PASS:", process.env.EMAIL_PASS);
+
+console.log(to,subject,text)
+
     const transporter = nodemailer.createTransport({
       service: 'gmail', // You can use "Mailtrap", "Outlook", "SendGrid" etc. as needed
       auth: {

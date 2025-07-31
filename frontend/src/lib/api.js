@@ -36,3 +36,23 @@ export const googleSignIn = async (credential) => {
   const res = await api.post('/api/v1/auth/google', { credential });
   return res.data;
 };
+
+
+export const forgotPassword = async (email) => {
+  const res = await api.post("/api/v1/auth/forgot-password", { email });
+  return res.data;
+};
+
+export const verifyCode = async (email, code) => {
+  const res = await api.post("/api/v1/auth/verify-code", { email, code });
+  return res.data;
+};
+
+export const resetPassword = async (email, code, newPassword) => {
+  const res = await api.post("/api/v1/auth/reset-password", {
+    email,
+    code,
+    newPassword,
+  });
+  return res.data;
+};
