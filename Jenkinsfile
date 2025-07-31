@@ -8,7 +8,7 @@ pipeline {
 
     BACKEND_IMAGE = "smilecheck-backend"
     BACKEND_CONTAINER = "smilecheck-backend"
-    BACKEND_PORT = "4000" // Change this if needed
+    BACKEND_PORT = "4000"
   }
 
   stages {
@@ -44,9 +44,10 @@ pipeline {
       steps {
         script {
           sh """
-            docker run -d \
-              --name ${FRONTEND_CONTAINER} \
-              -p ${FRONTEND_PORT}:${FRONTEND_PORT} \
+            docker run -d \\
+              --name ${FRONTEND_CONTAINER} \\
+              --env-file ./frontend/.env.production \\
+              -p ${FRONTEND_PORT}:${FRONTEND_PORT} \\
               ${FRONTEND_IMAGE}
           """
         }
@@ -54,9 +55,8 @@ pipeline {
     }
 
     // ======================
-    // BACKEND (Python - future)
+    // BACKEND
     // ======================
-
     stage('Build Backend Docker Image') {
       steps {
         script {
@@ -80,23 +80,23 @@ pipeline {
       steps {
         script {
           sh """
-            docker run -d \
-              --name ${BACKEND_CONTAINER} \
-              -p ${BACKEND_PORT}:${BACKEND_PORT} \
+            docker run -d \\
+              --name ${BACKEND_CONTAINER} \\
+              --env-file ./backend/.env.production \\
+              -p ${BACKEND_PORT}:${BACKEND_PORT} \\
               ${BACKEND_IMAGE}
           """
         }
       }
     }
-    
   }
 
   post {
     success {
-      echo "✅ Frontend deployed successfully on port ${FRONTEND_PORT}"
+      echo "✅ Frontend and Backend deployed successfully!"
     }
     failure {
-      echo "❌ Deployment failed. Check logs."
+      echo "❌ Deployment failed. Check logs for details."
     }
   }
 }
