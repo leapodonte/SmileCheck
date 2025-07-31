@@ -1,7 +1,7 @@
 import express from "express";
 import * as auth from "./auth.controller.js";
 import { googleOAuthHandler } from "./googleAuth.controller.js";
-import { verifyEmail } from "./verifyemail.js";
+import { verifyEmail } from "./verifyEmail.js";
 
 const authRouter = express.Router();
 
