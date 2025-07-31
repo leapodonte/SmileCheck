@@ -2,8 +2,7 @@ import { catchAsyncError } from "../../utils/catchAsyncError.js";
 import { AppError } from "../../utils/AppError.js";
 import { deleteOne } from "../../handlers/factor.js";
 import { ApiFeatures } from "../../utils/ApiFeatures.js";
-import { userModel } from "../../../Database/models/user.model.js";
-import bcrypt from "bcrypt";
+import { User } from "../../../database/models/user.model.js";
 
 const addUser = catchAsyncError(async (req, res, next) => {
   const addUser = new userModel(req.body);
@@ -13,7 +12,7 @@ const addUser = catchAsyncError(async (req, res, next) => {
 });
 
 const getAllUsers = catchAsyncError(async (req, res, next) => {
-  let apiFeature = new ApiFeatures(userModel.find(), req.query)
+  let apiFeature = new ApiFeatures(User.find(), req.query)
     .pagination()
     .fields()
     .filteration()
@@ -27,7 +26,7 @@ const getAllUsers = catchAsyncError(async (req, res, next) => {
 
 const updateUser = catchAsyncError(async (req, res, next) => {
   const { id } = req.params;
-  const updateUser = await userModel.findByIdAndUpdate(id, req.body, {
+  const updateUser = await User.findByIdAndUpdate(id, req.body, {
     new: true,
   });
 
@@ -40,7 +39,7 @@ const changeUserPassword = catchAsyncError(async (req, res, next) => {
   const { id } = req.params;
   req.body.passwordChangedAt = Date.now();
   console.log(req.body.passwordChangedAt);
-  const changeUserPassword = await userModel.findByIdAndUpdate(id, req.body, {
+  const changeUserPassword = await User.findByIdAndUpdate(id, req.body, {
     new: true,
   });
 
@@ -49,6 +48,6 @@ const changeUserPassword = catchAsyncError(async (req, res, next) => {
 
   !changeUserPassword && next(new AppError("User was not found", 404));
 });
-const deleteUser = deleteOne(userModel, "user");
+const deleteUser = deleteOne(User, "user");
 
 export { addUser, getAllUsers, updateUser, deleteUser, changeUserPassword };

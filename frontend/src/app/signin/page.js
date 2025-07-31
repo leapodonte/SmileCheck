@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Button, Snackbar, Alert } from "@mui/material";
+import { Snackbar, Alert } from "@mui/material";
 import IconButton from "@mui/material/IconButton";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
@@ -9,9 +9,39 @@ import { useState } from "react";
 import Image from "next/image";
 import { signInUser } from "@/lib/api";
 import { useRouter } from "next/navigation";
-
+import { useEffect } from "react";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 
 const SignInPage = () => {
+  useEffect(() => {
+    // Load Google Identity Services
+    const initializeGoogle = () => {
+      /* global google */
+      if (!window.google || !window.google.accounts) return;
+
+      window.google.accounts.id.initialize({
+        client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
+        callback: handleGoogleCredentialResponse,
+      });
+
+      window.google.accounts.id.renderButton(
+        document.getElementById("googleSignInBtn"),
+        {
+          theme: "outline",
+          size: "large",
+          width: "100%",
+        }
+      );
+    };
+
+    const script = document.createElement("script");
+    script.src = "https://accounts.google.com/gsi/client";
+    script.async = true;
+    script.defer = true;
+    script.onload = initializeGoogle;
+    document.body.appendChild(script);
+  }, []);
+
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -66,7 +96,7 @@ const SignInPage = () => {
     try {
       const response = await signInUser(formData);
       showSnackbar(response.message || "Signed in successfully!", "success");
-      router.push("/dashboard"); 
+      router.push("/dashboard");
 
       if (response.token) {
         localStorage.setItem("token", response.token);
@@ -79,6 +109,23 @@ const SignInPage = () => {
       showSnackbar(errorMessage, "error");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGoogleCredentialResponse = async (response) => {
+    try {
+      const credential = response.credential;
+      // Optionally decode to check data: const decoded = jwtDecode(credential);
+      const res = await googleSignIn(credential);
+
+      localStorage.setItem("token", res.token);
+      localStorage.setItem("user", JSON.stringify(res.user));
+      showSnackbar("Signed in with Google!", "success");
+      router.push("/dashboard");
+    } catch (err) {
+      const msg =
+        err.response?.data?.error || "Google Sign-In failed. Try again.";
+      showSnackbar(msg, "error");
     }
   };
 
@@ -217,15 +264,16 @@ const SignInPage = () => {
             <span className="bg-white px-1">Or</span>
           </div>
 
-          <div className="w-full flex flex-col gap-y-3">
-            <button
-              disabled={loading}
-              className="w-full flex items-center justify-center gap-2 bg-white text-gray-600 rounded-3xl text-sm normal-case py-2 px-4 shadow-none hover:shadow-md border border-gray-800 disabled:opacity-50"
-            >
-              <img src="/icons/google.png" alt="Google" className="w-5 h-5" />
-              <span>Sign In with Google</span>
-            </button>
-          </div>
+          <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}>
+            <div className="w-full flex flex-col gap-y-3">
+              <div
+                id="googleSignInBtn"
+                className="w-full flex items-center justify-center bg-white text-gray-600 rounded-3xl text-sm normal-case py-2 px-4 shadow-none hover:shadow-md border border-gray-800"
+              >
+                {/* This div will be replaced by the real Google button */}
+              </div>
+            </div>
+          </GoogleOAuthProvider>
 
           <span className="text-center text-xs sm:text-sm text-gray-600 mt-2 block">
             Don’t have an account?{" "}

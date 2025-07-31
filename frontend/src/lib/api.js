@@ -10,12 +10,6 @@ const api = axios.create({
   },
 });
 
-export const fetchProducts = async () => {
-  const res = await api.get('/products');
-  return res.data.getAllProducts;
-};
-// Add these functions to your existing API file
-
 // Sign up user
 export const signUpUser = async (userData) => {
   const res = await api.post('/api/v1/auth/signup', userData);
@@ -35,4 +29,10 @@ export const setAuthToken = (token) => {
   } else {
     delete api.defaults.headers.authorization;
   }
+};
+
+// Google Sign In
+export const googleSignIn = async (credential) => {
+  const res = await api.post('/api/v1/auth/google', { credential });
+  return res.data;
 };
