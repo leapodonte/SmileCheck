@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_DEV;
 
 // Create axios instance with default config
 const api = axios.create({
@@ -9,12 +9,6 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
 });
-
-export const fetchProducts = async () => {
-  const res = await api.get('/products');
-  return res.data.getAllProducts;
-};
-// Add these functions to your existing API file
 
 // Sign up user
 export const signUpUser = async (userData) => {
@@ -35,4 +29,30 @@ export const setAuthToken = (token) => {
   } else {
     delete api.defaults.headers.authorization;
   }
+};
+
+// Google Sign In
+export const googleSignIn = async (credential) => {
+  const res = await api.post('/api/v1/auth/google', { credential });
+  return res.data;
+};
+
+
+export const forgotPassword = async (email) => {
+  const res = await api.post("/api/v1/auth/forgot-password", { email });
+  return res.data;
+};
+
+export const verifyCode = async (email, code) => {
+  const res = await api.post("/api/v1/auth/verify-code", { email, code });
+  return res.data;
+};
+
+export const resetPassword = async (email, code, newPassword) => {
+  const res = await api.post("/api/v1/auth/reset-password", {
+    email,
+    code,
+    newPassword,
+  });
+  return res.data;
 };

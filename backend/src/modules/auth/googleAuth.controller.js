@@ -1,8 +1,8 @@
 import { OAuth2Client } from "google-auth-library";
-import { userModel } from "../../../Database/models/user.model.js";
 import { AppError } from "../../utils/AppError.js";
 import { catchAsyncError } from "../../utils/catchAsyncError.js";
 import jwt from "jsonwebtoken";
+import { User } from "../../../database/models/user.model.js";
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -37,7 +37,7 @@ const googleOAuthHandler = catchAsyncError(async (req, res, next) => {
   }
 
   // 2. Check if user already exists
-  let user = await userModel.findOne({ email });
+  let user = await User.findOne({ email });
 
   if (!user) {
     // 3. Create new Google user
