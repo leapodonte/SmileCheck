@@ -9,7 +9,8 @@ export const generateEmailVerification = async (user) => {
   user.emailVerificationTokenExpiry = Date.now() + 1000 * 60 * 60; // 1 hour
   await user.save();
 
-  const link = `http://localhost:4000/api/v1/auth/verify/email?token=${token}`;
+ const baseUrl = process.env.BACKEND_BASE_URL;
+  const link = `${baseUrl}/api/v1/auth/verify/email?token=${token}`;
 
   const html = `
     <div style="font-family: Arial, sans-serif; padding: 20px; background-color: #f4f4f4;">
