@@ -1,4 +1,4 @@
-import mongoose, { Schema, model } from "mongoose";
+import { Schema, model } from "mongoose";
 import bcrypt from "bcrypt";
 
 const userSchema = new Schema(
@@ -24,8 +24,14 @@ const userSchema = new Schema(
     },
 
     age: {
-      type: Number,
-      min: 0,
+      type: String,
+      enum: ["1-10", "10-20", "20-30", "30-40", "40-50", "50-60", "60+"],
+    },
+
+    // Store user's country
+    country: {
+      type: String,
+      trim: true,
     },
 
     googleId: {
@@ -82,12 +88,14 @@ const userSchema = new Schema(
     picture: {
       type: String,
     },
+    
     resetPasswordCode: {
-    type: String,
-  },
-  resetPasswordExpires: {
-    type: Date,
-  },
+      type: String,
+    },
+    
+    resetPasswordExpires: {
+      type: Date,
+    },
   },
   { timestamps: true }
 );

@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_DEV;
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
 
 // Create axios instance with default config
 const api = axios.create({
@@ -53,6 +53,14 @@ export const resetPassword = async (email, code, newPassword) => {
     email,
     code,
     newPassword,
+  });
+  return res.data;
+};
+
+// Check if email is verified
+export const checkEmailVerified = async (email) => {
+  const res = await api.get(`/api/v1/auth/is-verified`, {
+    params: { email },
   });
   return res.data;
 };

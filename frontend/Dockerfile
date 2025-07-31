@@ -15,4 +15,15 @@ COPY . .
 EXPOSE 3000
 
 # 6. Start the Next.js dev server
-CMD ["npm", "run", "dev"]
+# CMD ["npm", "run", "dev"]
+
+
+# modified by rohma for production
+# 5. Build the production app
+RUN npm run build
+
+# 6. Expose port
+EXPOSE 3000
+
+# 7. Start production server
+CMD ["npm", "start"]

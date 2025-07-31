@@ -18,4 +18,6 @@ authRouter.post('/forgot-password', auth.requestPasswordReset);
 authRouter.post('/verify-code', auth.verifyResetCode);
 authRouter.post('/reset-password', auth.resetPassword);
 
+authRouter.get('/is-verified', auth.checkUserVerification);
+
 export default authRouter;

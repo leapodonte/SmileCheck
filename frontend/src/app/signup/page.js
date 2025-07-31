@@ -1,319 +1,104 @@
-// "use client";
-
-// import Link from "next/link";
-// import { Button, Snackbar, Alert } from "@mui/material";
-// import IconButton from "@mui/material/IconButton";
-// import Visibility from "@mui/icons-material/Visibility";
-// import VisibilityOff from "@mui/icons-material/VisibilityOff";
-// import { useState } from "react";
-// import Image from "next/image";
-// import { signUpUser } from "@/lib/api";
-
-// const SignupPage = () => {
-//   const [formData, setFormData] = useState({
-//     first_name: "",
-//     last_name: "",
-//     email: "",
-//     password: "",
-//   });
-//   const [loading, setLoading] = useState(false);
-//   const [showPassword, setShowPassword] = useState(false);
-//   const [snackbar, setSnackbar] = useState({
-//     open: false,
-//     message: "",
-//     severity: "",
-//   });
-
-//   const showSnackbar = (message, severity) => {
-//     setSnackbar({ open: true, message, severity });
-//   };
-
-//   const handleClose = (_, reason) => {
-//     if (reason === "clickaway") return;
-//     setSnackbar({ open: false, message: "", severity: "" });
-//   };
-
-//   const validateName = (name) =>
-//     /^[a-zA-Z\s]+$/.test(name) && name.trim().length > 0;
-//   const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-//   const validatePassword = (password) => {
-//     const minLength = password.length >= 8;
-//     const hasUpperCase = /[A-Z]/.test(password);
-//     const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
-//     return {
-//       isValid: minLength && hasUpperCase && hasSpecialChar,
-//       minLength,
-//       hasUpperCase,
-//       hasSpecialChar,
-//     };
-//   };
-
-//   const validateForm = () => {
-//     if (!validateName(formData.first_name)) {
-//       showSnackbar(
-//         "First name can only contain letters and spaces.",
-//         "warning"
-//       );
-//       return false;
-//     }
-//     if (!validateName(formData.last_name)) {
-//       showSnackbar("Last name can only contain letters and spaces.", "warning");
-//       return false;
-//     }
-//     if (!validateEmail(formData.email)) {
-//       showSnackbar("Please enter a valid email address.", "warning");
-//       return false;
-//     }
-//     const pwd = validatePassword(formData.password);
-//     if (!pwd.isValid) {
-//       let msg = "Password must have: ";
-//       const reqs = [];
-//       if (!pwd.minLength) reqs.push("at least 8 characters");
-//       if (!pwd.hasUpperCase) reqs.push("one uppercase letter");
-//       if (!pwd.hasSpecialChar) reqs.push("one special character");
-//       showSnackbar(msg + reqs.join(", "), "warning");
-//       return false;
-//     }
-//     return true;
-//   };
-
-//   const handleInputChange = (e) => {
-//     const { name, value } = e.target;
-//     setFormData((prev) => ({ ...prev, [name]: value }));
-//   };
-
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-//     if (!validateForm()) return;
-//     setLoading(true);
-//     try {
-//       const userData = {
-//         name: `${formData.first_name} ${formData.last_name}`.trim(),
-//         email: formData.email,
-//         password: formData.password,
-//         isGoogleUser: false,
-//       };
-//       const response = await signUpUser(userData);
-//       showSnackbar(
-//         response.message || "Account created successfully!",
-//         "success"
-//       );
-//       if (response.token) {
-//         localStorage.setItem("token", response.token);
-//         localStorage.setItem("user", JSON.stringify(response.user));
-//       }
-//     } catch (err) {
-//       const errorMessage =
-//         err.response?.data?.message ||
-//         "Something went wrong. Please try again.";
-//       showSnackbar(errorMessage, "error");
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   return (
-
-//     <div className="relative w-full min-h-screen bg-center flex items-center justify-center">
-//   {/* Background Layers */}
-//   <Image
-//     src="/images/background.png"
-//     alt="Background"
-//     fill
-//     className="object-cover -z-20"
-//   />
-//   <Image
-//     src="/images/stars.png"
-//     alt="Stars"
-//     fill
-//     className="object-contain object-bottom opacity-70 -z-10"
-//   />
-//   <Image
-//     src="/images/lines.png"
-//     alt="Lines"
-//     fill
-//     className="object-contain object-bottom opacity-70 -z-10"
-//   />
-
-//   {/* Content Layout Container */}
-//   <div className="flex flex-col-reverse lg:flex-row items-center justify-center w-full px-4 sm:px-6 md:px-10 lg:px-12 xl:px-20 2xl:px-24 py-12 gap-8 max-w-screen-2xl mx-auto">
-
-//     {/* Left Section: Tooth Visual */}
-//     <section className="flex justify-center items-center w-full max-w-[500px]">
-//       <div className="relative w-[240px] sm:w-[320px] md:w-[380px] lg:w-[420px] h-[240px] sm:h-[320px] md:h-[380px] lg:h-[420px] pt-[40px] md:pt-[60px]">
-//         <Image
-//           src="/images/tooth.png"
-//           alt="Tooth with Magnifier"
-//           fill
-//           className="object-contain"
-//           priority
-//         />
-//       </div>
-//     </section>
-
-//     {/* Right Section: Form */}
-//     <div className="w-full max-w-[750px] mt-24 mb-2 bg-white opacity-90 rounded-xl shadow-2xl px-6 sm:px-10 py-8 z-10">
-//       <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900">Welcome 👋</h1>
-//       <p className="text-xs sm:text-sm text-gray-600 mb-4">
-//         Access your personalized dental care anytime, anywhere.
-//       </p>
-
-//       <form className="w-full flex flex-col gap-y-4" onSubmit={handleSubmit}>
-//         {["first_name", "last_name", "email", "password"].map((field) => (
-//           <div key={field}>
-//             <label
-//               htmlFor={field}
-//               className="text-xs sm:text-sm font-normal text-black capitalize"
-//             >
-//               {field.replace("_", " ")}
-//               <span className="text-red-500">*</span>
-//             </label>
-//             {field === "password" ? (
-//               <div className="relative">
-//                 <input
-//                   type={showPassword ? "text" : "password"}
-//                   name={field}
-//                   value={formData[field]}
-//                   onChange={handleInputChange}
-//                   placeholder="Password"
-//                   required
-//                   disabled={loading}
-//                   className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#0B869F] disabled:opacity-50 text-sm sm:text-base"
-//                 />
-//                 <IconButton
-//                   onClick={() => setShowPassword((prev) => !prev)}
-//                   className="!absolute top-1/2 right-2 -translate-y-1/2"
-//                   edge="end"
-//                   size="small"
-//                 >
-//                   {showPassword ? (
-//                     <VisibilityOff fontSize="small" />
-//                   ) : (
-//                     <Visibility fontSize="small" />
-//                   )}
-//                 </IconButton>
-//               </div>
-//             ) : (
-//               <input
-//                 type={field === "email" ? "email" : "text"}
-//                 name={field}
-//                 value={formData[field]}
-//                 onChange={handleInputChange}
-//                 placeholder={
-//                   field === "first_name"
-//                     ? "John"
-//                     : field === "last_name"
-//                     ? "Doe"
-//                     : "johndoe@email.com"
-//                 }
-//                 required
-//                 disabled={loading}
-//                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#0B869F] disabled:opacity-50 text-sm sm:text-base"
-//               />
-//             )}
-//           </div>
-//         ))}
-
-//         <div className="w-full text-right text-xs sm:text-sm mb-4">
-//           <Link href="/account/forgot-password" className="text-[#0B869F]">
-//             Forgot Password?
-//           </Link>
-//         </div>
-
-//         <Button
-//           type="submit"
-//           variant="contained"
-//           fullWidth
-//           disabled={loading}
-//           style={{
-//             backgroundColor: loading ? "#9CA3AF" : "#162D3A",
-//             textTransform: "none",
-//             padding: "0.5rem",
-//             fontSize: "0.875rem",
-//           }}
-//         >
-//           {loading ? "Creating Account..." : "Sign Up"}
-//         </Button>
-//       </form>
-
-//       <div className="p-6 text-center text-xs sm:text-sm text-gray-500">
-//         <span className="bg-white px-3">Or</span>
-//       </div>
-
-//       <div className="w-full flex flex-col gap-y-3">
-//         <Button
-//           variant="outlined"
-//           fullWidth
-//           disabled={loading}
-//           startIcon={
-//             <img src="/icons/google.png" alt="Google" className="w-5 h-5" />
-//           }
-//           style={{
-//             fontSize: "0.875rem",
-//           }}
-//         >
-//           Sign up with Google
-//         </Button>
-//       </div>
-
-//       <span className="text-center text-xs sm:text-sm text-gray-600 mt-8 block">
-//         Already a member?{" "}
-//         <Link href="/signin" className="text-[#0B869F] font-semibold">
-//           Sign in
-//         </Link>
-//         .
-//       </span>
-
-//       <Snackbar
-//         open={snackbar.open}
-//         autoHideDuration={4000}
-//         onClose={handleClose}
-//         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-//       >
-//         <Alert
-//           onClose={handleClose}
-//           severity={snackbar.severity}
-//           sx={{ width: "100%" }}
-//         >
-//           {snackbar.message}
-//         </Alert>
-//       </Snackbar>
-//     </div>
-//   </div>
-// </div>
-
-//   );
-// };
-
-// export default SignupPage;
-
 "use client";
 
 import Link from "next/link";
-import { Button, Snackbar, Alert } from "@mui/material";
+import { Snackbar, Alert } from "@mui/material";
 import IconButton from "@mui/material/IconButton";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
-import { signUpUser } from "@/lib/api";
+import { checkEmailVerified, signUpUser } from "@/lib/api";
+import { useRouter } from "next/navigation";
+import countries from "@/utils/countries";
 
 const SignupPage = () => {
+  const router = useRouter();
+  const [step, setStep] = useState(1); // Step 1: Email/Password, Step 2: Profile Info
   const [formData, setFormData] = useState({
-    first_name: "",
-    last_name: "",
     email: "",
     password: "",
-    age: "", // ✅ Added age field
+    confirmPassword: "",
+    name: "",
+    age: "",
+    country: "",
   });
 
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [detectedCountry, setDetectedCountry] = useState("");
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
     severity: "",
   });
+
+  // Age ranges for dropdown
+  const ageRanges = [
+    { value: "1-10", label: "1-10 years" },
+    { value: "10-20", label: "10-20 years" },
+    { value: "20-30", label: "20-30 years" },
+    { value: "30-40", label: "30-40 years" },
+    { value: "40-50", label: "40-50 years" },
+    { value: "50-60", label: "50-60 years" },
+    { value: "60+", label: "Greater than 60 years" },
+  ];
+
+  // Auto-detect country on component mount
+  useEffect(() => {
+    const detectCountry = async () => {
+      try {
+        const response = await fetch("https://ipwho.is/", {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.country) {
+            setDetectedCountry(data.country);
+            setFormData((prev) => ({ ...prev, country: data.country }));
+          } else {
+            throw new Error("Country detection failed");
+          }
+        } else {
+          throw new Error("Request failed");
+        }
+      } catch (error) {
+        console.error("ipwho.is failed:", error);
+        // fallback to default country
+        setDetectedCountry("Pakistan");
+        setFormData((prev) => ({ ...prev, country: "Pakistan" }));
+      }
+    };
+
+    if (step === 2) {
+      detectCountry();
+    }
+  }, [step]);
+
+    useEffect(() => {
+  let interval;
+  if (step === 3) {
+    interval = setInterval(async () => {
+      try {
+        const data = await checkEmailVerified(formData.email);
+        if (data.verified) {
+          localStorage.setItem("token", data.token);
+          localStorage.setItem("user", JSON.stringify(data.user));
+          router.push("/dashboard");
+        }
+      } catch (err) {
+        console.error("Failed to check verification", err);
+      }
+    }, 3000);
+  }
+
+  return () => clearInterval(interval);
+}, [step, formData.email]);
+
 
   const showSnackbar = (message, severity) => {
     setSnackbar({ open: true, message, severity });
@@ -324,9 +109,8 @@ const SignupPage = () => {
     setSnackbar({ open: false, message: "", severity: "" });
   };
 
-  const validateName = (name) =>
-    /^[a-zA-Z\s]+$/.test(name) && name.trim().length > 0;
   const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
   const validatePassword = (password) => {
     const minLength = password.length >= 8;
     const hasUpperCase = /[A-Z]/.test(password);
@@ -339,24 +123,12 @@ const SignupPage = () => {
     };
   };
 
-  const validateForm = () => {
-    if (!validateName(formData.first_name)) {
-      showSnackbar(
-        "First name can only contain letters and spaces.",
-        "warning"
-      );
-      return false;
-    }
-    if (!validateName(formData.last_name)) {
-      showSnackbar("Last name can only contain letters and spaces.", "warning");
-      return false;
-    }
+  const validateName = (name) =>
+    /^[a-zA-Z\s]+$/.test(name) && name.trim().length > 0;
+
+  const validateStep1 = () => {
     if (!validateEmail(formData.email)) {
       showSnackbar("Please enter a valid email address.", "warning");
-      return false;
-    }
-    if (!formData.age || isNaN(formData.age) || formData.age < 1) {
-      showSnackbar("Please enter a valid age.", "warning");
       return false;
     }
 
@@ -370,6 +142,28 @@ const SignupPage = () => {
       showSnackbar(msg + reqs.join(", "), "warning");
       return false;
     }
+
+    if (formData.password !== formData.confirmPassword) {
+      showSnackbar("Passwords do not match.", "warning");
+      return false;
+    }
+
+    return true;
+  };
+
+  const validateStep2 = () => {
+    if (!validateName(formData.name)) {
+      showSnackbar("Name can only contain letters and spaces.", "warning");
+      return false;
+    }
+    if (!formData.age) {
+      showSnackbar("Please select an age range.", "warning");
+      return false;
+    }
+    if (!formData.country) {
+      showSnackbar("Please select a country.", "warning");
+      return false;
+    }
     return true;
   };
 
@@ -378,26 +172,43 @@ const SignupPage = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!validateForm()) return;
+  const handleNext = () => {
+    if (validateStep1()) {
+      setStep(2);
+    }
+  };
+
+  const handleSkip = () => {
+    // Skip step 2 and proceed with minimal data
+    handleFinalSubmit(true);
+  };
+
+  const handleFinalSubmit = async (skipProfile = false) => {
+    if (!skipProfile && !validateStep2()) return;
+
     setLoading(true);
     try {
       const userData = {
-        name: `${formData.first_name} ${formData.last_name}`.trim(),
+        name: skipProfile ? "User" : formData.name,
         email: formData.email,
         password: formData.password,
-        age: parseInt(formData.age),
+        age: skipProfile ? null : formData.age,
+        country: skipProfile ? null : formData.country,
         isGoogleUser: false,
       };
+
       const response = await signUpUser(userData);
       showSnackbar(
         response.message || "Account created successfully!",
         "success"
       );
-      if (response.token) {
+
+      if (!response.user.verified) {
+        setStep(3); // Show verification instruction screen
+      } else {
         localStorage.setItem("token", response.token);
         localStorage.setItem("user", JSON.stringify(response.user));
+        router.push("/dashboard");
       }
     } catch (err) {
       const errorMessage =
@@ -407,6 +218,262 @@ const SignupPage = () => {
       setLoading(false);
     }
   };
+
+  const renderStep1 = () => (
+    <>
+      <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900">
+        Welcome 👋
+      </h1>
+      <p className="text-xs sm:text-sm text-gray-600 mb-4">
+        Create your account to access personalized dental care.
+      </p>
+
+      <div className="w-full flex flex-col gap-y-4">
+        {/* Email Field */}
+        <div>
+          <label
+            htmlFor="email"
+            className="text-xs sm:text-sm font-normal text-black"
+          >
+            Email <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="email"
+            name="email"
+            value={formData.email}
+            onChange={handleInputChange}
+            placeholder="johndoe@email.com"
+            required
+            disabled={loading}
+            className="w-full px-4 py-2 border text-black border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#0B869F] disabled:opacity-50 text-sm sm:text-base"
+          />
+        </div>
+
+        {/* Password Field */}
+        <div>
+          <label
+            htmlFor="password"
+            className="text-xs sm:text-sm font-normal text-black"
+          >
+            Password <span className="text-red-500">*</span>
+          </label>
+          <div className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              name="password"
+              value={formData.password}
+              onChange={handleInputChange}
+              placeholder="Password"
+              required
+              disabled={loading}
+              className="w-full px-4 py-2 pr-10 border text-black border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#0B869F] disabled:opacity-50 text-sm sm:text-base"
+            />
+            <IconButton
+              onClick={() => setShowPassword((prev) => !prev)}
+              className="!absolute top-1/2 right-2 -translate-y-1/2"
+              edge="end"
+              size="small"
+            >
+              {showPassword ? (
+                <VisibilityOff fontSize="small" />
+              ) : (
+                <Visibility fontSize="small" />
+              )}
+            </IconButton>
+          </div>
+        </div>
+
+        {/* Confirm Password Field */}
+        <div>
+          <label
+            htmlFor="confirmPassword"
+            className="text-xs sm:text-sm font-normal text-black"
+          >
+            Confirm Password <span className="text-red-500">*</span>
+          </label>
+          <div className="relative">
+            <input
+              type={showConfirmPassword ? "text" : "password"}
+              name="confirmPassword"
+              value={formData.confirmPassword}
+              onChange={handleInputChange}
+              placeholder="Confirm Password"
+              required
+              disabled={loading}
+              className="w-full px-4 py-2 pr-10 border text-black border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#0B869F] disabled:opacity-50 text-sm sm:text-base"
+            />
+            <IconButton
+              onClick={() => setShowConfirmPassword((prev) => !prev)}
+              className="!absolute top-1/2 right-2 -translate-y-1/2"
+              edge="end"
+              size="small"
+            >
+              {showConfirmPassword ? (
+                <VisibilityOff fontSize="small" />
+              ) : (
+                <Visibility fontSize="small" />
+              )}
+            </IconButton>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={handleNext}
+          disabled={loading}
+          className={`w-full mt-4 rounded-3xl text-white text-sm py-2 ${
+            loading ? "bg-[#1d616e]" : "bg-[#0B869F]"
+          } ${
+            loading
+              ? "cursor-not-allowed opacity-80"
+              : "hover:bg-[#09788e] transition"
+          }`}
+        >
+          Next
+        </button>
+      </div>
+    </>
+  );
+
+  const renderStep2 = () => (
+    <>
+      <div className="flex justify-between items-center mb-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900">
+            Complete Profile
+          </h1>
+          <p className="text-xs sm:text-sm text-gray-600">
+            Help us personalize your experience.
+          </p>
+        </div>
+        <button
+          onClick={handleSkip}
+          className="text-[#0B869F] text-sm font-semibold hover:underline"
+          disabled={loading}
+        >
+          Skip
+        </button>
+      </div>
+
+      <div className="w-full flex flex-col gap-y-4">
+        {/* Full Name Field */}
+        <div>
+          <label
+            htmlFor="name"
+            className="text-xs sm:text-sm font-normal text-black"
+          >
+            Full Name <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            name="name"
+            value={formData.name}
+            onChange={handleInputChange}
+            placeholder="John Doe"
+            required
+            disabled={loading}
+            className="w-full px-4 py-2 border text-black border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#0B869F] disabled:opacity-50 text-sm sm:text-base"
+          />
+        </div>
+
+        {/* Age Range Field */}
+        <div>
+          <label
+            htmlFor="age"
+            className="text-xs sm:text-sm font-normal text-black"
+          >
+            Age Range <span className="text-red-500">*</span>
+          </label>
+          <select
+            name="age"
+            value={formData.age}
+            onChange={handleInputChange}
+            required
+            disabled={loading}
+            className="w-full px-4 py-2 border text-black border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#0B869F] disabled:opacity-50 text-sm sm:text-base"
+          >
+            <option value="">Select age range</option>
+            {ageRanges.map((range) => (
+              <option key={range.value} value={range.value}>
+                {range.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Country Field */}
+        <div>
+          <label
+            htmlFor="country"
+            className="text-xs sm:text-sm font-normal text-black"
+          >
+            Country <span className="text-red-500">*</span>
+          </label>
+          <select
+            name="country"
+            value={formData.country}
+            onChange={handleInputChange}
+            required
+            disabled={loading}
+            className="w-full px-4 py-2 border text-black border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#0B869F] disabled:opacity-50 text-sm sm:text-base"
+          >
+            <option value="">Select country</option>
+            {countries.map((country) => (
+              <option key={country} value={country}>
+                {country}
+              </option>
+            ))}
+          </select>
+          {detectedCountry && (
+            <p className="text-xs text-gray-500 mt-1">
+              Auto-detected: {detectedCountry}
+            </p>
+          )}
+        </div>
+
+        <div className="flex gap-3 mt-4">
+          <button
+            type="button"
+            onClick={() => setStep(1)}
+            disabled={loading}
+            className="flex-1 rounded-3xl border border-[#0B869F] text-[#0B869F] text-sm py-2 hover:bg-gray-50 transition disabled:opacity-50"
+          >
+            Back
+          </button>
+          <button
+            type="button"
+            onClick={() => handleFinalSubmit(false)}
+            disabled={loading}
+            className={`flex-1 rounded-3xl text-white text-sm py-2 ${
+              loading ? "bg-[#1d616e]" : "bg-[#0B869F]"
+            } ${
+              loading
+                ? "cursor-not-allowed opacity-80"
+                : "hover:bg-[#09788e] transition"
+            }`}
+          >
+            {loading ? "Creating Account..." : "Complete Signup"}
+          </button>
+        </div>
+      </div>
+    </>
+  );
+
+  const renderStep3 = () => (
+  
+    <div className="text-center">
+      <h1 className="text-2xl font-semibold text-gray-900 mb-2">
+        Verify Your Email 📧
+      </h1>
+      <p className="text-sm text-gray-700 mb-4">
+        We’ve sent a verification link to <strong>{formData.email}</strong>.
+        Please open your email and click the link to verify your account.
+      </p>
+      <p className="text-xs text-gray-500">
+        After verification, you’ll be automatically redirected to the dashboard.
+      </p>
+    </div>
+  );
 
   return (
     <div className="relative w-full min-h-screen bg-center flex items-center justify-center">
@@ -457,101 +524,11 @@ const SignupPage = () => {
       2xl:max-w-[580px] 
       mt-24 mb-2 bg-white opacity-80 rounded-xl shadow-2xl px-10 sm:px-24  py-12 z-10"
         >
-          <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900">
-            Welcome 👋
-          </h1>
-          <p className="text-xs sm:text-sm text-gray-600 mb-4">
-            Access your personalized dental care anytime, anywhere.
-          </p>
-
-          <form
-            className="w-full flex flex-col gap-y-4"
-            onSubmit={handleSubmit}
-          >
-            {["first_name", "last_name", "age", "email", "password"].map(
-              (field) => (
-                <div key={field}>
-                  <label
-                    htmlFor={field}
-                    className="text-xs sm:text-sm font-normal text-black capitalize"
-                  >
-                    {field.replace("_", " ")}
-                    <span className="text-red-500">*</span>
-                  </label>
-
-                  {field === "password" ? (
-                    <div className="relative">
-                      <input
-                        type={showPassword ? "text" : "password"}
-                        name={field}
-                        value={formData[field]}
-                        onChange={handleInputChange}
-                        placeholder="Password"
-                        required
-                        disabled={loading}
-                        className="w-full px-4 py-2 pr-10 border text-black border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#0B869F] disabled:opacity-50 text-sm sm:text-base"
-                      />
-                      <IconButton
-                        onClick={() => setShowPassword((prev) => !prev)}
-                        className="!absolute top-1/2 right-2 -translate-y-1/2"
-                        edge="end"
-                        size="small"
-                      >
-                        {showPassword ? (
-                          <VisibilityOff fontSize="small" />
-                        ) : (
-                          <Visibility fontSize="small" />
-                        )}
-                      </IconButton>
-                    </div>
-                  ) : (
-                    <input
-                      type={
-                        field === "email"
-                          ? "email"
-                          : field === "age"
-                          ? "number"
-                          : "text"
-                      }
-                      name={field}
-                      value={formData[field]}
-                      onChange={handleInputChange}
-                      placeholder={
-                        field === "first_name"
-                          ? "John"
-                          : field === "last_name"
-                          ? "Doe"
-                          : field === "email"
-                          ? "johndoe@email.com"
-                          : field === "age"
-                          ? "21"
-                          : ""
-                      }
-                      required
-                      disabled={loading}
-                      min={field === "age" ? 1 : undefined}
-                      max={field === "age" ? 120 : undefined}
-                      className="w-full px-4 py-2 border text-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#0B869F] disabled:opacity-50 text-sm sm:text-base"
-                    />
-                  )}
-                </div>
-              )
-            )}
-
-            <button
-              type="submit"
-              disabled={loading}
-              className={`w-full mt-4 rounded-3xl text-white text-sm py-2 ${
-                loading ? "bg-[#1d616e]" : "bg-[#0B869F]"
-              } ${
-                loading
-                  ? "cursor-not-allowed opacity-80"
-                  : "hover:bg-[#09788e] transition"
-              }`}
-            >
-              {loading ? "Creating Account..." : "Sign Up"}
-            </button>
-          </form>
+          {step === 1
+            ? renderStep1()
+            : step === 2
+            ? renderStep2()
+            : renderStep3()}
 
           <span className="text-center text-xs sm:text-sm text-gray-600 mt-2 block">
             Already a member?{" "}
