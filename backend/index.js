@@ -1,5 +1,5 @@
 import express from "express";
-import { dbConnection } from "./Database/dbConnection.js";
+import { dbConnection } from "./database/dbConnection.js";
 import { bootstrap } from "./src/bootstrap.js";
 import dotenv from "dotenv";
 import morgan from "morgan";
