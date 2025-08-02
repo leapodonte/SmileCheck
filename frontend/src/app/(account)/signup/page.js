@@ -79,26 +79,35 @@ const SignupPage = () => {
     }
   }, [step]);
 
-    useEffect(() => {
-  let interval;
-  if (step === 3) {
-    interval = setInterval(async () => {
-      try {
-        const data = await checkEmailVerified(formData.email);
-        if (data.verified) {
-          localStorage.setItem("token", data.token);
-          localStorage.setItem("user", JSON.stringify(data.user));
-          router.push("/dashboard");
+  useEffect(() => {
+    let interval;
+    if (step === 3) {
+      interval = setInterval(async () => {
+        try {
+          const data = await checkEmailVerified(formData.email);
+          if (data.verified) {
+            localStorage.setItem("token", data.token);
+            localStorage.setItem("user", JSON.stringify(data.user));
+            router.push("/dashboard");
+          }
+        } catch (err) {
+          console.error("Failed to check verification", err);
         }
-      } catch (err) {
-        console.error("Failed to check verification", err);
-      }
-    }, 3000);
-  }
+      }, 3000);
+    }
 
-  return () => clearInterval(interval);
-}, [step, formData.email]);
+    return () => clearInterval(interval);
+  }, [step, formData.email]);
 
+  const isStep1Valid =
+    formData.email.trim() !== "" &&
+    formData.password.trim() !== "" &&
+    formData.confirmPassword.trim() !== "";
+
+  const isStep2Valid =
+    formData.name.trim() !== "" &&
+    formData.age.trim() !== "" &&
+    formData.country.trim() !== "";
 
   const showSnackbar = (message, severity) => {
     setSnackbar({ open: true, message, severity });
@@ -320,14 +329,12 @@ const SignupPage = () => {
         <button
           type="button"
           onClick={handleNext}
-          disabled={loading}
+          disabled={!isStep1Valid || loading}
           className={`w-full mt-4 rounded-3xl text-white text-sm py-2 ${
-            loading ? "bg-[#1d616e]" : "bg-[#0B869F]"
-          } ${
-            loading
-              ? "cursor-not-allowed opacity-80"
-              : "hover:bg-[#09788e] transition"
-          }`}
+            !isStep1Valid || loading
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-[#0B869F] hover:bg-[#09788e]"
+          } transition`}
         >
           Next
         </button>
@@ -443,14 +450,12 @@ const SignupPage = () => {
           <button
             type="button"
             onClick={() => handleFinalSubmit(false)}
-            disabled={loading}
-            className={`flex-1 rounded-3xl text-white text-sm py-2 ${
-              loading ? "bg-[#1d616e]" : "bg-[#0B869F]"
-            } ${
-              loading
-                ? "cursor-not-allowed opacity-80"
-                : "hover:bg-[#09788e] transition"
-            }`}
+            disabled={!isStep2Valid || loading}
+            className={`flex-1 rounded-3xl text-white text-sm py-2  ${
+              !isStep2Valid || loading
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-[#0B869F] hover:bg-[#09788e]"
+            } transition`}
           >
             {loading ? "Creating Account..." : "Complete Signup"}
           </button>
@@ -460,7 +465,6 @@ const SignupPage = () => {
   );
 
   const renderStep3 = () => (
-  
     <div className="text-center">
       <h1 className="text-2xl font-semibold text-gray-900 mb-2">
         Verify Your Email 📧

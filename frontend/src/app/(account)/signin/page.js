@@ -9,38 +9,22 @@ import { useState } from "react";
 import Image from "next/image";
 import { signInUser } from "@/lib/api";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
-import { GoogleOAuthProvider } from "@react-oauth/google";
+import NextAuthGoogleButton from "@/components/NextAuthGoogleButton";
 
 const SignInPage = () => {
-  useEffect(() => {
-    // Load Google Identity Services
-    const initializeGoogle = () => {
-      /* global google */
-      if (!window.google || !window.google.accounts) return;
+  const router = useRouter();
+  
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "",
+  });
 
-      window.google.accounts.id.initialize({
-        client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
-        callback: handleGoogleCredentialResponse,
-      });
+  const showSnackbar = (message, severity) => {
+    setSnackbar({ open: true, message, severity });
+  };
+  
 
-      window.google.accounts.id.renderButton(
-        document.getElementById("googleSignInBtn"),
-        {
-          theme: "outline",
-          size: "large",
-          width: "100%",
-        }
-      );
-    };
-
-    const script = document.createElement("script");
-    script.src = "https://accounts.google.com/gsi/client";
-    script.async = true;
-    script.defer = true;
-    script.onload = initializeGoogle;
-    document.body.appendChild(script);
-  }, []);
 
   const [formData, setFormData] = useState({
     email: "",
@@ -51,15 +35,6 @@ const SignInPage = () => {
     formData.email.trim() !== "" && formData.password.trim() !== "";
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    message: "",
-    severity: "",
-  });
-
-  const showSnackbar = (message, severity) => {
-    setSnackbar({ open: true, message, severity });
-  };
 
   const handleClose = (_, reason) => {
     if (reason === "clickaway") return;
@@ -86,8 +61,6 @@ const SignInPage = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const router = useRouter();
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
@@ -101,7 +74,6 @@ const SignInPage = () => {
       if (response.token) {
         localStorage.setItem("token", response.token);
         localStorage.setItem("user", JSON.stringify(response.user));
-        // Navigate to dashboard or homepage if needed
       }
     } catch (err) {
       const errorMessage =
@@ -109,23 +81,6 @@ const SignInPage = () => {
       showSnackbar(errorMessage, "error");
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleGoogleCredentialResponse = async (response) => {
-    try {
-      const credential = response.credential;
-      // Optionally decode to check data: const decoded = jwtDecode(credential);
-      const res = await googleSignIn(credential);
-
-      localStorage.setItem("token", res.token);
-      localStorage.setItem("user", JSON.stringify(res.user));
-      showSnackbar("Signed in with Google!", "success");
-      router.push("/dashboard");
-    } catch (err) {
-      const msg =
-        err.response?.data?.error || "Google Sign-In failed. Try again.";
-      showSnackbar(msg, "error");
     }
   };
 
@@ -264,18 +219,10 @@ const SignInPage = () => {
             <span className="bg-white px-1">Or</span>
           </div>
 
-            <div className="w-full flex flex-col gap-y-3">
-              <div
-                id="googleSignInBtn"
-                className="w-full flex items-center justify-center bg-white text-gray-600 rounded-3xl text-sm normal-case py-2 px-4 shadow-none hover:shadow-md border border-gray-800"
-              >
-                {/* This div will be replaced by the real Google button */}
-              </div>
-            </div>
-          
+          <NextAuthGoogleButton showSnackbar={showSnackbar} />
 
           <span className="text-center text-xs sm:text-sm text-gray-600 mt-2 block">
-            Don’t have an account?{" "}
+            Don't have an account?{" "}
             <Link href="/signup" className="text-[#0B869F] font-semibold">
               Sign up
             </Link>

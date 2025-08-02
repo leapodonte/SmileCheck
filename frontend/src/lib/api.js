@@ -1,8 +1,7 @@
 import axios from 'axios';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:4000';
 
-// Create axios instance with default config
 const api = axios.create({
   baseURL: API_BASE,
   headers: {
@@ -10,19 +9,16 @@ const api = axios.create({
   },
 });
 
-// Sign up user
 export const signUpUser = async (userData) => {
   const res = await api.post('/api/v1/auth/signup', userData);
   return res.data;
 };
 
-// Sign in user
 export const signInUser = async (credentials) => {
   const res = await api.post('/api/v1/auth/signin', credentials);
   return res.data;
 };
 
-// Add token to request headers for authenticated requests
 export const setAuthToken = (token) => {
   if (token) {
     api.defaults.headers.authorization = `Bearer ${token}`;
@@ -31,11 +27,6 @@ export const setAuthToken = (token) => {
   }
 };
 
-// Google Sign In
-export const googleSignIn = async (credential) => {
-  const res = await api.post('/api/v1/auth/google', { credential });
-  return res.data;
-};
 
 
 export const forgotPassword = async (email) => {
@@ -57,7 +48,6 @@ export const resetPassword = async (email, code, newPassword) => {
   return res.data;
 };
 
-// Check if email is verified
 export const checkEmailVerified = async (email) => {
   const res = await api.get(`/api/v1/auth/is-verified`, {
     params: { email },
