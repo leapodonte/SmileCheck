@@ -9,7 +9,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
-import axios from "axios"; // MISSING IMPORT - This was causing the error!
+import axios from "axios";
 import countries from "@/utils/countries";
 
 const SignupPage = () => {
@@ -165,7 +165,7 @@ const SignupPage = () => {
 
     setLoading(true);
     try {
-      const res = await axios.post("/api/signup", formData);
+      const res = await axios.post(`${process.env.NEXT_PUBLIC_API_BASE}/api/signup`, formData);
 
       if (res.status === 200 || res.status === 201) {
         setUserId(res.data.userId);
@@ -191,9 +191,10 @@ const SignupPage = () => {
       return;
     }
 
+    
     setLoading(true);
     try {
-      const res = await fetch("/api/verify-code", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/api/verify-code`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -244,7 +245,7 @@ const SignupPage = () => {
 
     setLoading(true);
     try {
-      const res = await axios.post("/api/signup", skipData);
+      const res = await axios.post(`${process.env.NEXT_PUBLIC_API_BASE}/api/signup`, skipData);
 
       if (res.status === 200 || res.status === 201) {
         setUserId(res.data.userId);
