@@ -1,5 +1,3 @@
-"use client";
-
 import Image from "next/image";
 
 const testimonials = [
@@ -19,7 +17,7 @@ const testimonials = [
     name: "Mathieu",
     age: 41,
     quote:
-      "Whenever I have a concern, I just ask the AI dentist. It’s fast, reassuring, and incredibly convenient — no more guessing or waiting for appointments.",
+      "Whenever I have a concern, I just ask the AI dentist. It's fast, reassuring, and incredibly convenient — no more guessing or waiting for appointments.",
   },
   {
     name: "Élise",
@@ -212,7 +210,7 @@ export default function Home() {
           src="/images/background.png"
           alt="Gradient Background"
           fill
-          className="object-coverobject-center z-0"
+          className="object-cover object-center z-0"
         />
         <div className="absolute inset-0 z-10" />
         <div className="relative z-20 max-w-7xl mx-auto px-6 text-center">

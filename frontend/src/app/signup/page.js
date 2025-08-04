@@ -7,13 +7,14 @@ import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { checkEmailVerified, signUpUser } from "@/lib/api";
 import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
+import axios from "axios"; // MISSING IMPORT - This was causing the error!
 import countries from "@/utils/countries";
 
 const SignupPage = () => {
   const router = useRouter();
-  const [step, setStep] = useState(1); // Step 1: Email/Password, Step 2: Profile Info
+  const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -22,7 +23,8 @@ const SignupPage = () => {
     age: "",
     country: "",
   });
-
+  const [verificationCode, setVerificationCode] = useState("");
+  const [userId, setUserId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -78,36 +80,6 @@ const SignupPage = () => {
       detectCountry();
     }
   }, [step]);
-
-  useEffect(() => {
-    let interval;
-    if (step === 3) {
-      interval = setInterval(async () => {
-        try {
-          const data = await checkEmailVerified(formData.email);
-          if (data.verified) {
-            localStorage.setItem("token", data.token);
-            localStorage.setItem("user", JSON.stringify(data.user));
-            router.push("/dashboard");
-          }
-        } catch (err) {
-          console.error("Failed to check verification", err);
-        }
-      }, 3000);
-    }
-
-    return () => clearInterval(interval);
-  }, [step, formData.email]);
-
-  const isStep1Valid =
-    formData.email.trim() !== "" &&
-    formData.password.trim() !== "" &&
-    formData.confirmPassword.trim() !== "";
-
-  const isStep2Valid =
-    formData.name.trim() !== "" &&
-    formData.age.trim() !== "" &&
-    formData.country.trim() !== "";
 
   const showSnackbar = (message, severity) => {
     setSnackbar({ open: true, message, severity });
@@ -187,41 +159,105 @@ const SignupPage = () => {
     }
   };
 
-  const handleSkip = () => {
-    // Skip step 2 and proceed with minimal data
-    handleFinalSubmit(true);
-  };
-
-  const handleFinalSubmit = async (skipProfile = false) => {
-    if (!skipProfile && !validateStep2()) return;
+  // Fixed function - removed confusing parameter and proper validation
+  const handleFinalSubmit = async () => {
+    if (!validateStep2()) return;
 
     setLoading(true);
     try {
-      const userData = {
-        name: skipProfile ? "User" : formData.name,
+      const res = await axios.post("/api/signup", formData);
+
+      if (res.status === 200 || res.status === 201) {
+        setUserId(res.data.userId);
+        setStep(3);
+        showSnackbar("Account created! Check your email for verification code.", "success");
+      } else {
+        showSnackbar(res.data.message || "Registration failed.", "error");
+      }
+    } catch (error) {
+      console.error("Registration error:", error); // Better error logging
+      const errorMessage = error.response?.data?.message || 
+                          error.message || 
+                          "Registration failed. Please try again.";
+      showSnackbar(errorMessage, "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyEmail = async () => {
+    if (!verificationCode || verificationCode.length !== 6) {
+      showSnackbar("Please enter a valid 6-digit code.", "warning");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await fetch("/api/verify-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId,
+          code: verificationCode,
+        }),
+      });
+
+      const data = await res.json();
+      
+      if (!res.ok) {
+        throw new Error(data.message || "Verification failed");
+      }
+
+      showSnackbar("Email verified successfully!", "success");
+      
+      
+      // Auto-login after successful verification
+      const result = await signIn("credentials", {
+        redirect: false,
         email: formData.email,
         password: formData.password,
-        age: skipProfile ? null : formData.age,
-        country: skipProfile ? null : formData.country,
-        isGoogleUser: false,
-      };
+      });
 
-      const response = await signUpUser(userData);
-      showSnackbar(
-        response.message || "Account created successfully!",
-        "success"
-      );
-
-      if (!response.user.verified) {
-        setStep(3); // Show verification instruction screen
-      } else {
-        localStorage.setItem("token", response.token);
-        localStorage.setItem("user", JSON.stringify(response.user));
+      if (result?.ok) {
         router.push("/dashboard");
+      } else {
+        // If auto-login fails, still redirect to signin
+        showSnackbar("Verification successful! Please sign in.", "success");
+        setTimeout(() => router.push("/signin"), 2000);
       }
-    } catch (err) {
-      const errorMessage =
-        err.response?.data?.error || "Something went wrong. Please try again.";
+    } catch (error) {
+      console.error("Verification error:", error);
+      showSnackbar(error.message || "Verification failed.", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fixed skip function - make fields optional for skip
+  const handleSkip = async () => {
+    const skipData = {
+      ...formData,
+      name: formData.name || "Anonymous User", // Provide default
+      age: formData.age || "Not specified",
+      country: formData.country || detectedCountry || "Not specified"
+    };
+
+    setLoading(true);
+    try {
+      const res = await axios.post("/api/signup", skipData);
+
+      if (res.status === 200 || res.status === 201) {
+        setUserId(res.data.userId);
+        setStep(3);
+        showSnackbar("Account created! Check your email for verification code.", "success");
+      } else {
+        showSnackbar(res.data.message || "Registration failed.", "error");
+      }
+    } catch (error) {
+      console.error("Registration error:", error);
+      const errorMessage = error.response?.data?.message || 
+                          error.message || 
+                          "Registration failed. Please try again.";
       showSnackbar(errorMessage, "error");
     } finally {
       setLoading(false);
@@ -329,12 +365,14 @@ const SignupPage = () => {
         <button
           type="button"
           onClick={handleNext}
-          disabled={!isStep1Valid || loading}
+          disabled={loading}
           className={`w-full mt-4 rounded-3xl text-white text-sm py-2 ${
-            !isStep1Valid || loading
-              ? "bg-gray-400 cursor-not-allowed"
-              : "bg-[#0B869F] hover:bg-[#09788e]"
-          } transition`}
+            loading ? "bg-[#1d616e]" : "bg-[#0B869F]"
+          } ${
+            loading
+              ? "cursor-not-allowed opacity-80"
+              : "hover:bg-[#09788e] transition"
+          }`}
         >
           Next
         </button>
@@ -449,13 +487,15 @@ const SignupPage = () => {
           </button>
           <button
             type="button"
-            onClick={() => handleFinalSubmit(false)}
-            disabled={!isStep2Valid || loading}
-            className={`flex-1 rounded-3xl text-white text-sm py-2  ${
-              !isStep2Valid || loading
-                ? "bg-gray-400 cursor-not-allowed"
-                : "bg-[#0B869F] hover:bg-[#09788e]"
-            } transition`}
+            onClick={handleFinalSubmit}
+            disabled={loading}
+            className={`flex-1 rounded-3xl text-white text-sm py-2 ${
+              loading ? "bg-[#1d616e]" : "bg-[#0B869F]"
+            } ${
+              loading
+                ? "cursor-not-allowed opacity-80"
+                : "hover:bg-[#09788e] transition"
+            }`}
           >
             {loading ? "Creating Account..." : "Complete Signup"}
           </button>
@@ -470,11 +510,45 @@ const SignupPage = () => {
         Verify Your Email 📧
       </h1>
       <p className="text-sm text-gray-700 mb-4">
-        We’ve sent a verification link to <strong>{formData.email}</strong>.
-        Please open your email and click the link to verify your account.
+        We've sent a verification code to <strong>{formData.email}</strong>.
+        Please check your email and enter the 6-digit code below.
       </p>
-      <p className="text-xs text-gray-500">
-        After verification, you’ll be automatically redirected to the dashboard.
+      
+      <div className="w-full flex flex-col gap-y-4">
+        <div>
+          <label
+            htmlFor="verificationCode"
+            className="text-xs sm:text-sm font-normal text-black"
+          >
+            Verification Code <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            value={verificationCode}
+            onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, ''))} // Only allow digits
+            placeholder="Enter 6-digit code"
+            maxLength={6}
+            required
+            disabled={loading}
+            className="w-full px-4 py-2 border text-black border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#0B869F] disabled:opacity-50 text-sm sm:text-base text-center text-lg tracking-widest"
+          />
+        </div>
+
+        <button
+          onClick={handleVerifyEmail}
+          disabled={loading || verificationCode.length !== 6}
+          className={`w-full rounded-3xl text-white text-sm py-2 ${
+            verificationCode.length !== 6 || loading
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-[#0B869F] hover:bg-[#09788e]"
+          } transition`}
+        >
+          {loading ? "Verifying..." : "Verify Email"}
+        </button>
+      </div>
+
+      <p className="text-xs text-gray-500 mt-4">
+        After verification, you'll be automatically signed in and redirected to the dashboard.
       </p>
     </div>
   );

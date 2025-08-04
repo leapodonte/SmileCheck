@@ -8,18 +8,19 @@ import cors from 'cors'
 dotenv.config();
 const app = express();
 
-app.use(cors({
-  origin: "http://localhost:3000",
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-  credentials: true
-}));
-
+// Middleware
+app.use(cors());
 app.use(express.json());
 app.use(morgan("dev"));
-app.use(express.static("uploads"));
 
+// Initialize app
 bootstrap(app);
 dbConnection();
 
-app.listen(process.env.PORT || 4000, () => console.log(`Example app listening on port ${process.env.PORT || 4000}!`));
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({ status: 'OK', message: 'SmileCheck Backend is running' });
+});
+
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`SmileCheck Backend listening on port ${PORT}!`));

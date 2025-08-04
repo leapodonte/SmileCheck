@@ -6,8 +6,10 @@ import Link from "next/link"
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
+    setMounted(true)
     const handleScroll = () => {
       setScrolled(window.scrollY > 20)
     }
@@ -16,12 +18,13 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
 
+  // Use a default class that matches the server-rendered state
+  const navClass = `fixed top-6 left-1/2 transform -translate-x-1/2 z-50 w-[90%] max-w-7xl 
+    ${mounted && scrolled ? "bg-white/70" : ""} backdrop-blur-md 
+    rounded-2xl px-6 py-3 shadow-lg flex justify-between items-center transition-colors duration-300`
+
   return (
-    <nav
-      className={`fixed top-6 left-1/2 transform -translate-x-1/2 z-50 w-[90%] max-w-7xl 
-      ${scrolled ? "bg-white/70" : ""} backdrop-blur-md 
-      rounded-2xl px-6 py-3 shadow-lg flex justify-between items-center transition-colors duration-300`}
-    >
+    <nav className={navClass}>
       <Link href="/" className="flex items-center space-x-2">
         <Image
           src="/icons/smilecheck.png"
