@@ -9,6 +9,11 @@ const UserSchema = new mongoose.Schema(
     country: String,
     emailVerified: { type: Boolean, default: false },
     verificationCode: String,
+    provider: {
+    type: String,
+    enum: ["credentials", "google"],
+    default: "credentials",
+  },
   },
   { timestamps: true }
 );
