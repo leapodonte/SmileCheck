@@ -1,22 +1,21 @@
 // app/api/verify-code/route.js
+
 import { NextResponse } from 'next/server';
-import dbConnect from "@/lib/mongodb";
 import User from "@/models/User";
-import mongoose from "mongoose";
+import dbConnect from '@/lib/dbConnect';
+import bcrypt from 'bcryptjs';
 
 export async function POST(request) {
   try {
-    const { userId, code } = await request.json();
+    const { email, code, newPassword } = await request.json();
 
-    // Validate input
-    if (!userId || !code) {
+    if (!email || !code) {
       return NextResponse.json(
-        { message: "User ID and verification code are required" },
+        { message: "Email and verification code are required" },
         { status: 400 }
       );
     }
 
-    // Validate code format (should be 6 digits)
     if (!/^\d{6}$/.test(code)) {
       return NextResponse.json(
         { message: "Invalid verification code format" },
@@ -26,40 +25,18 @@ export async function POST(request) {
 
     await dbConnect();
 
-    // Validate userId format
-    if (!mongoose.Types.ObjectId.isValid(userId)) {
-      return NextResponse.json(
-        { message: "Invalid user ID" },
-        { status: 400 }
-      );
-    }
+    const user = await User.findOne({ email });
 
-    // Find user
-    const user = await User.findById(userId);
     if (!user) {
-      return NextResponse.json(
-        { message: "User not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ message: "User not found" }, { status: 404 });
     }
 
-    // Check if already verified
-    if (user.emailVerified) {
-      return NextResponse.json(
-        { message: "Email already verified" },
-        { status: 400 }
-      );
-    }
-
-    // Check if verification code exists
     if (!user.verificationCode) {
-      return NextResponse.json(
-        { message: "No verification code found. Please request a new one." },
-        { status: 400 }
-      );
+      return NextResponse.json({
+        message: "No verification code found. Please request a new one.",
+      }, { status: 400 });
     }
 
-    // Verify code
     if (user.verificationCode !== code) {
       return NextResponse.json(
         { message: "Invalid verification code" },
@@ -67,16 +44,21 @@ export async function POST(request) {
       );
     }
 
-    // Update user
+    // Clear the code and mark email verified
     user.emailVerified = true;
     user.verificationCode = undefined;
+
+    // If password change is requested
+    if (newPassword) {
+      user.password = await bcrypt.hash(newPassword, 10);
+    }
+
     await user.save();
 
     return NextResponse.json(
-      { message: "Email verified successfully" },
+      { message: newPassword ? "Password reset successful" : "Verification successful" },
       { status: 200 }
     );
-
   } catch (error) {
     console.error("Verification error:", error);
     return NextResponse.json(

@@ -9,7 +9,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
-import axios from "axios";
+import axios from "axios"
 import countries from "@/utils/countries";
 
 const SignupPage = () => {
@@ -24,11 +24,14 @@ const SignupPage = () => {
     country: "",
   });
   const [verificationCode, setVerificationCode] = useState("");
+  const [generatedCode, setGeneratedCode] = useState("");
   const [userId, setUserId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [detectedCountry, setDetectedCountry] = useState("");
+  const [countdown, setCountdown] = useState(0);
+  const [codeExpired, setCodeExpired] = useState(false);
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
@@ -80,6 +83,24 @@ const SignupPage = () => {
       detectCountry();
     }
   }, [step]);
+
+  // Countdown timer effect
+  useEffect(() => {
+    let timer;
+    if (countdown > 0) {
+      timer = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev <= 1) {
+            setCodeExpired(true);
+            showSnackbar("Verification code has expired. Please request a new one.", "warning");
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [countdown]);
 
   const showSnackbar = (message, severity) => {
     setSnackbar({ open: true, message, severity });
@@ -159,6 +180,12 @@ const SignupPage = () => {
     }
   };
 
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
   // Fixed function - removed confusing parameter and proper validation
   const handleFinalSubmit = async () => {
     if (!validateStep2()) return;
@@ -169,16 +196,48 @@ const SignupPage = () => {
 
       if (res.status === 200 || res.status === 201) {
         setUserId(res.data.userId);
+        setGeneratedCode(res.data.verificationCode || ""); // Assuming API returns the code
         setStep(3);
+        setCountdown(60); // Start 5-minute countdown for signup
+        setCodeExpired(false);
         showSnackbar("Account created! Check your email for verification code.", "success");
       } else {
         showSnackbar(res.data.message || "Registration failed.", "error");
       }
     } catch (error) {
-      console.error("Registration error:", error); // Better error logging
+      console.error("Registration error:", error);
       const errorMessage = error.response?.data?.message || 
                           error.message || 
                           "Registration failed. Please try again.";
+      showSnackbar(errorMessage, "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendCode = async () => {
+    setLoading(true);
+    try {
+      // Use the same signup endpoint to regenerate and send code
+      const res = await axios.post(`${process.env.NEXT_PUBLIC_API_BASE}/api/signup`, {
+        ...formData,
+        resend: true // Add flag to indicate this is a resend request
+      });
+
+      if (res.status === 200 || res.status === 201) {
+        setGeneratedCode(res.data.verificationCode || "");
+        setCountdown(60); 
+        setCodeExpired(false);
+        setVerificationCode(""); // Clear current input
+        showSnackbar("New verification code sent to your email!", "success");
+      } else {
+        showSnackbar(res.data.message || "Failed to resend code.", "error");
+      }
+    } catch (error) {
+      console.error("Resend error:", error);
+      const errorMessage = error.response?.data?.message || 
+                          error.message || 
+                          "Failed to resend code. Please try again.";
       showSnackbar(errorMessage, "error");
     } finally {
       setLoading(false);
@@ -191,14 +250,18 @@ const SignupPage = () => {
       return;
     }
 
-    
+    if (codeExpired) {
+      showSnackbar("This code has expired. Please request a new one.", "error");
+      return;
+    }
+
     setLoading(true);
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/api/verify-code`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          userId,
+          email: formData.email,
           code: verificationCode,
         }),
       });
@@ -210,7 +273,6 @@ const SignupPage = () => {
       }
 
       showSnackbar("Email verified successfully!", "success");
-      
       
       // Auto-login after successful verification
       const result = await signIn("credentials", {
@@ -249,7 +311,10 @@ const SignupPage = () => {
 
       if (res.status === 200 || res.status === 201) {
         setUserId(res.data.userId);
+        setGeneratedCode(res.data.verificationCode || "");
         setStep(3);
+        setCountdown(60); // Start 5-minute countdown
+        setCodeExpired(false);
         showSnackbar("Account created! Check your email for verification code.", "success");
       } else {
         showSnackbar(res.data.message || "Registration failed.", "error");
@@ -515,6 +580,40 @@ const SignupPage = () => {
         Please check your email and enter the 6-digit code below.
       </p>
       
+      {/* Improved Countdown Timer */}
+      <div className="mb-6">
+        {countdown > 0 ? (
+          <div className="bg-gradient-to-r from-green-50 to-indigo-50 border border-green-200 rounded-lg p-3">
+            <p className="text-sm text-green-700 font-medium mb-1">
+              Code Active
+            </p>
+            <div className="flex items-center justify-center gap-2">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+              <span className="text-lg font-mono font-bold text-green-800">
+                {formatTime(countdown)}
+              </span>
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+            </div>
+            <p className="text-xs text-green-600 mt-1">
+              Time remaining for this code
+            </p>
+          </div>
+        ) : codeExpired ? (
+          <div className="bg-gradient-to-r from-red-50 to-rose-50 border border-red-200 rounded-lg p-4">
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+              <p className="text-sm font-semibold text-red-700">
+                Code Expired
+              </p>
+              <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+            </div>
+            <p className="text-xs text-red-600">
+              Your verification code has expired. Please request a new one to continue.
+            </p>
+          </div>
+        ) : null}
+      </div>
+      
       <div className="w-full flex flex-col gap-y-4">
         <div>
           <label
@@ -530,22 +629,53 @@ const SignupPage = () => {
             placeholder="Enter 6-digit code"
             maxLength={6}
             required
-            disabled={loading}
-            className="w-full px-4 py-2 border text-black border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#0B869F] disabled:opacity-50 text-sm sm:text-base text-center text-lg tracking-widest"
+            disabled={loading || codeExpired}
+            className={`w-full px-4 py-2 border text-black border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#0B869F] disabled:opacity-50 text-sm sm:text-base text-center text-lg tracking-widest ${
+              codeExpired ? "bg-gray-100" : ""
+            }`}
           />
         </div>
 
+        <div className="flex gap-3">
+          <button
+            onClick={() => {
+              setStep(2);
+              setVerificationCode("");
+              setCountdown(0);
+              setCodeExpired(false);
+            }}
+            disabled={loading}
+            className="flex-1 rounded-3xl border border-[#0B869F] text-[#0B869F] text-sm py-2 hover:bg-gray-50 transition disabled:opacity-50"
+          >
+            Back
+          </button>
+          <button
+            onClick={handleVerifyEmail}
+            disabled={loading || verificationCode.length !== 6 || codeExpired}
+            className={`flex-1 rounded-3xl text-white text-sm py-2 ${
+              verificationCode.length !== 6 || loading || codeExpired
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-[#0B869F] hover:bg-[#09788e]"
+            } transition`}
+          >
+            {loading ? "Verifying..." : "Verify Email"}
+          </button>
+        </div>
+      </div>
+
+      <div className="mt-4">
         <button
-          onClick={handleVerifyEmail}
-          disabled={loading || verificationCode.length !== 6}
-          className={`w-full rounded-3xl text-white text-sm py-2 ${
-            verificationCode.length !== 6 || loading
-              ? "bg-gray-400 cursor-not-allowed"
-              : "bg-[#0B869F] hover:bg-[#09788e]"
-          } transition`}
+          onClick={handleResendCode}
+          disabled={loading || (countdown > 0 && !codeExpired)}
+          className={`text-sm font-semibold transition ${
+            loading || (countdown > 0 && !codeExpired)
+              ? "text-gray-400 cursor-not-allowed"
+              : "text-[#0B869F] hover:underline"
+          }`}
         >
-          {loading ? "Verifying..." : "Verify Email"}
+          {loading ? "Sending..." : "Resend Code"}
         </button>
+        
       </div>
 
       <p className="text-xs text-gray-500 mt-4">
