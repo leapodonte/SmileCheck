@@ -44,9 +44,16 @@ pipeline {
       steps {
         script {
           sh """
+            # Copy secure .env.local from VPS to working dir
+            cp /opt/env-files/smilecheck/frontend.env.local ./frontend/.env.local
+
+            # Merge .env.local (fallback) and .env.production (override)
+            cat ./frontend/.env.local ./frontend/.env.production | awk '!seen[\$0]++' > ./frontend/.env.merged
+
+            # Run frontend container with merged env
             docker run -d \\
               --name ${FRONTEND_CONTAINER} \\
-              --env-file ./frontend/.env.production \\
+              --env-file ./frontend/.env.merged \\
               -p ${FRONTEND_PORT}:${FRONTEND_PORT} \\
               ${FRONTEND_IMAGE}
           """
@@ -80,9 +87,16 @@ pipeline {
       steps {
         script {
           sh """
+            # Copy secure .env.local from VPS to working dir
+            cp /opt/env-files/smilecheck/backend.env.local ./backend/.env.local
+
+            # Merge .env.local (fallback) and .env.production (override)
+            cat ./backend/.env.local ./backend/.env.production | awk '!seen[\$0]++' > ./backend/.env.merged
+
+            # Run backend container with merged env
             docker run -d \\
               --name ${BACKEND_CONTAINER} \\
-              --env-file ./backend/.env.production \\
+              --env-file ./backend/.env.merged \\
               -p ${BACKEND_PORT}:${BACKEND_PORT} \\
               ${BACKEND_IMAGE}
           """

@@ -1,9 +1,9 @@
 // app/api/signup/route.js
 import { NextResponse } from 'next/server';
-import dbConnect from "@/lib/mongodb";
 import User from "@/models/User";
 import { sendVerificationEmail } from "@/lib/sendEmail";
 import bcrypt from "bcryptjs";
+import dbConnect from '@/lib/dbConnect';
 
 export async function POST(request) {
   try {
