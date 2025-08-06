@@ -198,7 +198,7 @@ const SignupPage = () => {
         setUserId(res.data.userId);
         setGeneratedCode(res.data.verificationCode || ""); // Assuming API returns the code
         setStep(3);
-        setCountdown(300); // Start 5-minute countdown for signup
+        setCountdown(60); // Start 5-minute countdown for signup
         setCodeExpired(false);
         showSnackbar("Account created! Check your email for verification code.", "success");
       } else {
@@ -313,7 +313,7 @@ const SignupPage = () => {
         setUserId(res.data.userId);
         setGeneratedCode(res.data.verificationCode || "");
         setStep(3);
-        setCountdown(300); // Start 5-minute countdown
+        setCountdown(60); // Start 5-minute countdown
         setCodeExpired(false);
         showSnackbar("Account created! Check your email for verification code.", "success");
       } else {
