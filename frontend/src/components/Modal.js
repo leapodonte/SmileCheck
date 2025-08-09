@@ -122,7 +122,7 @@ export default function Modal() {
         )}
 
         {/* Circle Frame */}
-        <div className="w-48 h-48 mx-auto overflow-hidden relative mb-4 rounded-full border border-white shadow-md">
+        <div className="w-48 h-48 mx-auto overflow-hidden relative mb-4 shadow-md">
           {isCameraOpen ? (
             <video
               ref={videoRef}
