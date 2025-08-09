@@ -286,7 +286,7 @@ const SignupPage = () => {
       } else {
         // If auto-login fails, still redirect to signin
         showSnackbar("Verification successful! Please sign in.", "success");
-        setTimeout(() => router.push("/signin"), 2000);
+        router.push("/signin");
       }
     } catch (error) {
       console.error("Verification error:", error);
